@@ -81,6 +81,7 @@ public class Main {
             System.out.println("3. Find Bot by ID");
             System.out.println("4. Update Bot");
             System.out.println("5. Delete Bot");
+            System.out.println("6. Show All Bots (Sorted with Lambdas)");
             System.out.println("0. Back to Main Menu");
             System.out.print("Select operation: ");
 
@@ -133,6 +134,20 @@ public class Main {
                         int delId = Integer.parseInt(scanner.nextLine());
                         service.deleteBot(delId);
                         System.out.println("Success: Bot deleted.");
+                        break;
+                    case "6":
+                        List<Bot> sortedBots = service.getAllBots();
+
+                        System.out.println("Sort by: 1. Token Limit | 2. Name");
+                        String sortType = scanner.nextLine();
+
+                        if (sortType.equals("1")) {
+                            utils.SortingUtils.sortBotsByTokenLimit(sortedBots);
+                        } else {
+                            utils.SortingUtils.sortBotsByName(sortedBots);
+                        }
+
+                        sortedBots.forEach(Bot::displayInfo);
                         break;
 
                     case "0":
