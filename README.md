@@ -1,161 +1,136 @@
-# Chatbot Platform API
+# Chatbot Platform API (SOLID Edition)
 
-- [A. Project Overview](#a-project-overview)
-- [B. OOP Design Documentation](#b-oop-design-documentation)
-- [C. Database Description](#c-database-description)
-- [D. Controller](#d-controller)
-- [E. Instructions to Compile and Run](#e-instructions-to-compile-and-run)
-- [F. Screenshots](#f-screenshots)
-- [G. Reflection Section](#g-reflection-section)
+**Assignment 4 Refactoring Project**
 
 ## A. Project Overview
+This project is an advanced Java-based API representing a "Milestone 2" refactoring of the Chatbot Platform. Building upon the previous version, this iteration strictly enforces **SOLID Architecture** principles and implements advanced Object-Oriented Programming features such as **Generics**, **Reflection**, **Lambdas**, and **Abstract Entities**.
 
-This project is a Java-based API developed for Assignment 3. The purpose of the API is to manage the lifecycle of AI personas (Bots), Users, and their interactions (Chat Sessions). The application is built using a layered architecture (Controller-Service-Repository) and connects to a PostgreSQL database using JDBC.
-
-The system models three main entities:
-* **Bot**: Represents an AI character with a specific definition and token limit.
-* **User**: Represents a human user with a specific persona.
-* **ChatSession**: Represents a composite entity linking a User and a Bot, now fully persisted in the database with usage statistics.
-
-The project demonstrates advanced Object-Oriented Programming concepts, including inheritance, polymorphism, and **Dependency Injection** (injected Repositories and Database providers). It implements data persistence using raw SQL queries via `PreparedStatement` to ensure security and performance.
+The system manages the lifecycle of AI personas (Bots), Users, and Chat Sessions using a **Layered Architecture** (Controller -> Service -> Repository -> Database). It demonstrates how to write clean, maintainable, and extensible enterprise-level Java code.
 
 ---
 
-## B. OOP Design Documentation
+## B. SOLID Architecture Documentation
+This project was refactored to adhere to the five SOLID principles:
 
-### Abstract class and subclasses
-The project uses an inheritance hierarchy to minimize code duplication.
-* **`ChatParticipantBase` (Abstract Class)**: Defines the common state (`id`, `name`) and behavior for all participants.
-* **`Bot` (Subclass)**: Extends the base class and adds fields for `greeting`, `definition`, and `tokenLimit`.
-* **`User` (Subclass)**: Extends the base class and adds `persona` and `isPremium` status.
+1. **Single Responsibility Principle (SRP)**:
+   Each class has a distinct responsibility. **`BotRepository`** handles only SQL operations. **`ChatService`** handles only business logic and validation. **`ReflectionUtils`** handles only runtime inspection. The Controller (**`Main`**) contains no business logic, only menu routing.
 
-### Interfaces and implemented methods
-* **`Tokenizable` (Business Logic Interface)**: Defines `estimateTokenUsage()`. Both `Bot` and `User` implement this to calculate computational costs differently.
-* **`IDB` (Infrastructure Interface)**: Defines the contract for database connections (`getConnection`).
-    * Implemented by **`PostgresDB`**: Handles the specific JDBC driver logic and credentials. This allows decoupling the application logic from the specific database implementation.
+2. **Open/Closed Principle (OCP)**:
+   The system is designed for extension. The **`BaseEntity`** and **`ChatParticipantBase`** classes allow us to add new types of participants (e.g., "Moderator" or "Admin") without modifying the core logic of existing entities.
 
-### Composition/aggregation
-* **`ChatSession` Class**: Aggregates `Bot` and `User` objects. It tracks the start time and the `totalTokensUsed` for the interaction, providing a snapshot of the conversation cost.
+3. **Liskov Substitution Principle (LSP)**:
+   Subclasses like **`Bot`** and **`User`** can be used interchangeably wherever **`ChatParticipantBase`** is expected (e.g., in validation checks) without breaking the application.
 
-### Polymorphism examples
-* **Repositories**: The `ChatService` relies on the `IDB` interface, not a concrete database class, allowing for flexible dependency injection.
-* **Domain Models**: `ChatParticipantBase` references allow treating Bots and Users uniformly in certain contexts (e.g., logging names).
+4. **Interface Segregation Principle (ISP)**:
+   Instead of one massive interface, we use small, focused interfaces. **`Validatable`** handles validation, **`Loggable`** handles logging, and **`CrudRepository`** handles database access.
 
-### UML diagram
-
-![UML Class Diagram](docs/uml.png)
+5. **Dependency Inversion Principle (DIP)**:
+   High-level modules do not depend on low-level modules. The **`ChatService`** does not depend on concrete classes like `PostgresDB` or specific repositories directly; it depends on abstractions (interfaces) injected via the constructor.
 
 ---
 
-## C. Database Description
+## C. Advanced OOP Features
+The project implements specific advanced Java features as required:
 
-The project uses a relational database (PostgreSQL) named `chatbot_platform`.
-
-### Schema, constraints, foreign keys
-
-1.  **users**
-    * `id` (SERIAL, PK): Unique identifier.
-    * `name` (VARCHAR): User's name. Not Null.
-    * `persona` (TEXT): Description of the user.
-    * `is_premium` (BOOLEAN): Premium status flag.
-
-2.  **bots**
-    * `id` (SERIAL, PK): Unique identifier.
-    * `name` (VARCHAR): Bot's name. Not Null.
-    * `greeting` (TEXT): Initial message.
-    * `definition` (TEXT): System instructions.
-    * `token_limit` (INT): Check constraint `CHECK (token_limit > 0)`.
-
-3.  **chat_sessions**
-    * `id` (SERIAL, PK): Unique identifier.
-    * `bot_id` (INT): FK referencing `bots(id)`. ON DELETE CASCADE.
-    * `user_id` (INT): FK referencing `users(id)`. ON DELETE CASCADE.
-    * `started_at` (TIMESTAMP): Session start time.
-    * `total_tokens_used` (INT): Stores the calculated context load for the session.
-
-### Sample SQL inserts (from resources/schema.sql)
-
-```sql
-INSERT INTO users (name, persona, is_premium) VALUES 
-('Alice', 'Friendly girl trying to find her way home.', TRUE);
-
-INSERT INTO bots (name, greeting, definition, token_limit) VALUES 
-('Wonderland', '*You know the beginning...*', 'You are the Narrator...', 16000);
-```
+* **Generics**: Implemented **`CrudRepository<T>`**. This allows us to write the Create, Read, Update, and Delete logic once and reuse it for `Bot`, `User`, and `ChatSession` entities, ensuring type safety and reducing code duplication.
+* **Lambdas**: Used in **`SortingUtils`**. We use lambda expressions `(a, b) -> ...` to define custom comparators for sorting Bots by token limit or name dynamically.
+* **Reflection (RTTI)**: Implemented in **`ReflectionUtils`**. This utility inspects objects at runtime, printing out their class names, methods, and even private fields (by suppressing access checks), demonstrating deep introspection capabilities.
+* **Interface Methods**: The **`Validatable`** interface uses **default** methods (to provide a standard validation printout) and **static** methods (for null checking helper logic).
 
 ---
 
-## D. Controller
+## D. OOP Design Documentation
 
-The `Main` class serves as the Controller layer. It configures the application using **Dependency Injection** (wiring Repositories with the Database provider) and exposes full CRUD operations via CLI.
+### Abstract Class Hierarchy
+* **`BaseEntity`**: The root abstract class containing the `id` field. All persistent objects extend this.
+* **`ChatParticipantBase`**: Extends `BaseEntity`. Adds `name` and implements `Validatable`.
+* **`Bot` & `User`**: Concrete subclasses that extend `ChatParticipantBase`, adding unique fields like `tokenLimit` or `persona`.
+* **`ChatSession`**: Extends `BaseEntity` directly, representing a composition of a User and a Bot.
 
-### Menu Structure
-1.  **Manage BOTS**: Sub-menu for Creating, Reading (All/ById), Updating, and Deleting Bots.
-2.  **Manage USERS**: Sub-menu for Creating, Reading (All/ById), Updating, and Deleting Users.
-3.  **Manage SESSIONS**: Sub-menu for Starting Chats, Viewing History, Updating Tokens, and Deleting Logs.
+### Interfaces
+* **`Validatable`**: Ensures entities check their own data integrity.
+* **`CrudRepository<T>`**: Defines the contract for all database operations.
 
-### Architecture Flow
-* **Controller (`Main`)**: Handles user input via `Scanner`, displays menus, and delegates logic to the Service layer.
-* **Service (`ChatService`)**: Validates input (e.g., checks for empty names, negative limits) and calls Repositories.
-* **Repository Layer**: Executes raw SQL queries using `PreparedStatement`.
-* 
+### UML Diagram
+*(See `docs/uml.png` in the project folder)*
+
 ---
 
-## E. Instructions to Compile and Run
+## E. Database Description
+The project connects to a **PostgreSQL** database named `chatbot_platform`.
 
-### 1. Database Setup (Required)
-Before running the application, you must initialize the database:
-1.  Create a new PostgreSQL database named `chatbot_platform`.
-2.  Open the file `resources/schema.sql` and execute the SQL script inside your database manager (pgAdmin / DBeaver).
-    * *This creates the required tables and columns (including `total_tokens_used`).*
+### Schema & Constraints
+1. **users**: Stores user data. Primary Key: `id`.
+2. **bots**: Stores AI profiles. Primary Key: `id`. Check Constraint: `token_limit > 0`.
+3. **chat_sessions**: Links Users and Bots. Foreign Keys: `user_id`, `bot_id` (On Delete Cascade).
 
-### 2. Configuration (Environment Variables)
-The application uses **Environment Variables** for security, but includes a fallback for local testing.
-* **Option A (Recommended):** Set the following Environment Variables in your IDE run configuration:
-    * `DB_HOST` (e.g., localhost:5432)
-    * `DB_NAME` (e.g., chatbot_platform)
-    * `DB_USER` (e.g., postgres)
-    * `DB_PASSWORD` (your actual password)
-* **Option B (Quick Start):** Open `src/controller/Main.java`, locate the "Configuration" block at the start of the `main` method, and update the default password string:
-    ```java
-    if (dbPass == null) dbPass = "YOUR_REAL_PASSWORD"; 
-    ```
+**Sample SQL:**
 
-### 3. Build and Run
-Navigate to the `src` directory in your terminal:
+    INSERT INTO bots (name, greeting, definition, token_limit) VALUES ('Bot', 'Hi', 'Desc', 100);
+    INSERT INTO users (name, persona, is_premium) VALUES ('User', 'Test', true);
+
+---
+
+## F. Architecture Explanation
+The project follows a strict **Layered Architecture**:
+
+1. **Controller Layer (`Main.java`)**: The entry point. It handles user input via CLI and calls the Service layer. **Contains NO business logic.**
+2. **Service Layer (`ChatService.java`)**: The brain of the application. It validates inputs (e.g., checking for negative tokens), coordinates sorting, handles exceptions, and calls the Repository layer.
+3. **Repository Layer (`BotRepository`, etc.)**: The data access layer. It implements `CrudRepository<T>` and executes JDBC `PreparedStatement` queries.
+4. **Database Layer**: PostgreSQL accessed via the `IDB` interface.
+
+---
+
+## G. Instructions to Compile and Run
+
+### Prerequisites
+* Java JDK 17+
+* PostgreSQL Database
+* PostgreSQL JDBC Driver
+
+### Execution
+1. **Database**: Run the `resources/schema.sql` script in your SQL tool to create tables.
+2. **Config**: Ensure `DB_PASSWORD` is set in `Main.java` or environment variables.
+3. **Run**:
 
 ```bash
-# Compile (ensure the JDBC driver path is correct)
-javac -cp ".:../lib/postgresql-42.7.2.jar" controller/Main.java
+   # Compile (ensure postgresql jar path is correct)
+   javac -cp ".:postgresql-42.7.2.jar" controller/Main.java
 
-# Run
-java -cp ".:../lib/postgresql-42.7.2.jar" controller.Main
+   # Run
+   java -cp ".:postgresql-42.7.2.jar" controller.Main
 ```
-*(Note: If using IntelliJ IDEA, simply Run `Main.java` via the green play button. Ensure the PostgreSQL library is added to Project Structure -> Modules -> Dependencies).*
 
 ---
-## F. Screenshots
 
-### 1. Main Hierarchical Menu
-The new entry point of the application, allowing selection between Bots, Users, and Sessions entities.
+## H. Screenshots
+
+### 1. Main Menu
 ![Main Menu](docs/screenshots/main_menu.png)
 
-### 2. Bot Management Sub-Menu
-Demonstrates the specific CRUD operations available for Bots (Create, Show All, Find by ID, Update, Delete).
-![Bot Menu](docs/screenshots/bot_crud.png)
+### 2. Bot CRUD Operations
+![Bot CRUD](docs/screenshots/bot_crud.png)
 
-### 3. Session History & Logic
-Shows the session history table, displaying linked Bot IDs and User IDs correctly persisted in the database.
+### 3. Session History (with fixed IDs)
 ![Session History](docs/screenshots/session_history.png)
 
-### 4. Robust Error Handling
-Demonstrates the system catching invalid inputs (e.g., entering text instead of a numeric ID) without crashing.
-![Error Handling](docs/screenshots/error_handling.png)
+### 4. Reflection Analysis Output
+![Reflection Output](docs/screenshots/reflection_output.png)
+
+### 5. Sorted List (Lambdas)
+![Sorted List](docs/screenshots/sorted_list.png)## H. Screenshots
+*(Images are located in `docs/screenshots/`)*
+
+1. **Main Menu**: Shows the CLI interface.
+2. **Bot CRUD**: Demonstrates creating and finding bots.
+3. **Session History**: Shows the interaction between users and bots.
+4. **Reflection Output**: Shows the `ReflectionUtils` inspecting a Bot object.
+5. **Sorted List**: Shows Lambdas sorting bots by token limit.
 
 ---
 
-## G. Reflection Section
+## I. Reflection Section
 
-* **What you learned**: I learned how to refactor a monolithic application into a clean architecture using **Dependency Injection**. Moving from a static `DatabaseConnection` class to an `IDB` interface implementation (`PostgresDB`) taught me how to make code more testable and flexible. I also mastered raw SQL queries for Update and Delete operations.
-* **Challenges faced**: Transitioning to Environment Variables was tricky initially, as I had to configure the IDE correctly to pass the credentials. Implementing the `Update` logic was also challenging, as it required mapping all fields correctly in the `PreparedStatement`.
-* **Benefits of JDBC and multi-layer design**: Using JDBC allows for persistent data storage, meaning data is not lost when the program closes. The multi-layer design makes the application modular; for example, I can change the database logic in the `Repository` without breaking the code in the `Main` menu. `PreparedStatement` also provides security against SQL injection, which is a crucial benefit over simple string concatenation.
+* **What I learned**: This assignment solidified my understanding of **SOLID principles**. I learned that abstracting the ID into `BaseEntity` allows for powerful Generic Repositories. Using **Reflection** was fascinating as it showed how frameworks like Spring likely work under the hood.
+* **Challenges**: Refactoring the repositories to use **Generics** `CrudRepository<T>` was tricky because I had to unify the method signatures. Also, ensuring the `Service` layer caught all exceptions instead of the Controller required rewriting the try-catch blocks.
+* **Value of Architecture**: The Layered Architecture makes the code much cleaner. If I want to change the database from PostgreSQL to MySQL, I only touch the Repository layer, not the Service or Controller. Similarly, business rules are isolated in the Service, making them easy to test.
