@@ -25,8 +25,8 @@ public class ChatSession extends BaseEntity {
     @Override
     public String toString() {
         return "Session ID: " + getId() +
-                " | Bot: " + (bot != null ? bot.getName() : "null") +
-                " | User: " + (user != null ? user.getName() : "null") +
+                " | Bot ID: " + (bot != null ? bot.getId() : "null") +
+                " | User ID: " + (user != null ? user.getId() : "null") +
                 " | Tokens: " + totalTokensUsed;
     }
 }
