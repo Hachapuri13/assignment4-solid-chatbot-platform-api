@@ -10,7 +10,6 @@ import repository.ChatSessionRepository;
 import repository.UserRepository;
 
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Date;
 
@@ -25,14 +24,12 @@ public class ChatService {
         this.sessionRepository = chatSessionRepository;
     }
 
-    // Bot CRUD operations
     public List<model.Bot> getAllBots() throws SQLException {
         return botRepository.getAll();
     }
 
     public model.Bot getBotById(int id) throws SQLException, exception.ResourceNotFoundException {
         model.Bot bot = botRepository.getById(id);
-
         if (bot == null) {
             throw new exception.ResourceNotFoundException("Bot with ID " + id + " not found.");
         }
@@ -67,7 +64,6 @@ public class ChatService {
         }
 
         model.Bot updatedBot = new model.Bot(id, newName, newGreet, newDef, newLimit);
-
         boolean isUpdated = botRepository.update(updatedBot);
 
         if (!isUpdated) {
@@ -77,13 +73,11 @@ public class ChatService {
 
     public void deleteBot(int id) throws SQLException {
         boolean isDeleted = botRepository.delete(id);
-
         if (!isDeleted) {
             throw new exception.ResourceNotFoundException("Bot with ID " + id + " not found.");
         }
     }
 
-    // User CRUD operations
     public List<model.User> getAllUsers() throws SQLException {
         return userRepository.getAll();
     }
@@ -112,7 +106,6 @@ public class ChatService {
         }
 
         model.User updatedUser = new model.User(id, newName, newPersona, isPremium);
-
         boolean success = userRepository.update(updatedUser);
         if (!success) {
             throw new exception.ResourceNotFoundException("Cannot update: User with ID " + id + " not found.");
@@ -126,13 +119,12 @@ public class ChatService {
         }
     }
 
-    // ChatSession CRUD operations
-    public List<model.ChatSession> getAllSessions() throws SQLException {
+    public List<ChatSession> getAllSessions() throws SQLException {
         return sessionRepository.getAll();
     }
 
-    public model.ChatSession getSessionById(int id) throws SQLException, exception.ResourceNotFoundException {
-        model.ChatSession session = sessionRepository.getById(id);
+    public ChatSession getSessionById(int id) throws SQLException, exception.ResourceNotFoundException {
+        ChatSession session = sessionRepository.getById(id);
         if (session == null) {
             throw new exception.ResourceNotFoundException("Session with ID " + id + " not found.");
         }
@@ -161,6 +153,13 @@ public class ChatService {
 
         if (!success) {
             throw new exception.DatabaseOperationException("Failed to update session.");
+        }
+    }
+
+    public void deleteSession(int id) throws SQLException, exception.ResourceNotFoundException {
+        boolean success = sessionRepository.delete(id);
+        if (!success) {
+            throw new exception.ResourceNotFoundException("Cannot delete: Session with ID " + id + " not found.");
         }
     }
 }
