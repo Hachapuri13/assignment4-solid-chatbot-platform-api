@@ -118,14 +118,7 @@ The project follows a strict **Layered Architecture**:
 ![Reflection Output](docs/screenshots/reflection_output.png)
 
 ### 5. Sorted List (Lambdas)
-![Sorted List](docs/screenshots/sorted_list.png)## H. Screenshots
-*(Images are located in `docs/screenshots/`)*
-
-1. **Main Menu**: Shows the CLI interface.
-2. **Bot CRUD**: Demonstrates creating and finding bots.
-3. **Session History**: Shows the interaction between users and bots.
-4. **Reflection Output**: Shows the `ReflectionUtils` inspecting a Bot object.
-5. **Sorted List**: Shows Lambdas sorting bots by token limit.
+![Sorted List](docs/screenshots/sorted_list.png)
 
 ---
 
