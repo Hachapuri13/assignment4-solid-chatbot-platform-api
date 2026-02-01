@@ -4,6 +4,7 @@ import exception.InvalidInputException;
 import exception.ResourceNotFoundException;
 import model.Bot;
 import model.User;
+import model.ChatSession;
 import repository.BotRepository;
 import repository.ChatSessionRepository;
 import repository.UserRepository;
@@ -139,8 +140,8 @@ public class ChatService {
     }
 
     public void logChatSession(Bot bot, User user, Date startTime, int tokensUsed) throws SQLException {
-        Timestamp sqlStartTime = new Timestamp(startTime.getTime());
-        sessionRepository.logSession(bot, user, sqlStartTime, tokensUsed);
+        ChatSession session = new ChatSession(0, bot, user, startTime, tokensUsed);
+        sessionRepository.create(session);
     }
 
     public void updateSessionTokens(int id, int newTotalTokens)
@@ -150,16 +151,16 @@ public class ChatService {
             throw new exception.InvalidInputException("Token count cannot be negative.");
         }
 
-        boolean success = sessionRepository.update(id, newTotalTokens);
-        if (!success) {
+        ChatSession session = sessionRepository.getById(id);
+        if (session == null) {
             throw new exception.ResourceNotFoundException("Cannot update: Session with ID " + id + " not found.");
         }
-    }
 
-    public void deleteSession(int id) throws SQLException, exception.ResourceNotFoundException {
-        boolean success = sessionRepository.delete(id);
+        session.setTotalTokensUsed(newTotalTokens);
+        boolean success = sessionRepository.update(session);
+
         if (!success) {
-            throw new exception.ResourceNotFoundException("Cannot delete: Session with ID " + id + " not found.");
+            throw new exception.DatabaseOperationException("Failed to update session.");
         }
     }
 }

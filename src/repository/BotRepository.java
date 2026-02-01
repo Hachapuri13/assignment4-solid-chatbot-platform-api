@@ -2,16 +2,19 @@ package repository;
 
 import data.interfaces.IDB;
 import model.Bot;
+import repository.interfaces.CrudRepository;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BotRepository {
+public class BotRepository implements CrudRepository<Bot> {
     private final IDB db;
 
     public BotRepository(IDB db) {
         this.db = db;
     }
+
+    @Override
     public void create(Bot bot) throws SQLException {
         String sql = "INSERT INTO bots (name, greeting, definition, token_limit) VALUES (?, ?, ?, ?)";
         try (Connection conn = db.getConnection();
@@ -24,6 +27,7 @@ public class BotRepository {
         }
     }
 
+    @Override
     public List<Bot> getAll() throws SQLException {
         List<Bot> bots = new ArrayList<>();
         String sql = "SELECT * FROM bots";
@@ -43,6 +47,7 @@ public class BotRepository {
         return bots;
     }
 
+    @Override
     public Bot getById(int id) throws SQLException {
         String sql = "SELECT * FROM bots WHERE id = ?";
         try (Connection conn = db.getConnection();
@@ -62,6 +67,7 @@ public class BotRepository {
         return null;
     }
 
+    @Override
     public boolean delete(int id) throws SQLException {
         String sql = "DELETE FROM bots WHERE id = ?";
 
@@ -75,6 +81,7 @@ public class BotRepository {
         }
     }
 
+    @Override
     public boolean update(Bot bot) throws SQLException {
         String sql = "UPDATE bots SET name = ?, greeting = ?, definition = ?, token_limit = ? WHERE id = ?";
 

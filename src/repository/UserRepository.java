@@ -2,17 +2,19 @@ package repository;
 
 import data.interfaces.IDB;
 import model.User;
+import repository.interfaces.CrudRepository;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserRepository {
+public class UserRepository implements CrudRepository<User> {
     private final IDB db;
 
     public UserRepository(IDB db) {
         this.db = db;
     }
 
+    @Override
     public void create(User user) throws SQLException {
         String sql = "INSERT INTO users (name, persona, is_premium) VALUES (?, ?, ?)";
         try (Connection conn = db.getConnection();
@@ -24,6 +26,7 @@ public class UserRepository {
         }
     }
 
+    @Override
     public List<User> getAll() throws SQLException {
         List<User> users = new ArrayList<>();
         String sql = "SELECT * FROM users";
@@ -42,6 +45,7 @@ public class UserRepository {
         return users;
     }
 
+    @Override
     public User getById(int id) throws SQLException {
         String sql = "SELECT * FROM users WHERE id = ?";
         try (Connection conn = db.getConnection();
@@ -60,6 +64,7 @@ public class UserRepository {
         return null;
     }
 
+    @Override
     public boolean delete(int id) throws SQLException {
         String sql = "DELETE FROM users WHERE id = ?";
         try (Connection conn = db.getConnection();
@@ -69,6 +74,7 @@ public class UserRepository {
         }
     }
 
+    @Override
     public boolean update(User user) throws SQLException {
         String sql = "UPDATE users SET name = ?, persona = ?, is_premium = ? WHERE id = ?";
         try (Connection conn = db.getConnection();
