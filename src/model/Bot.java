@@ -1,5 +1,7 @@
 package model;
 
+import model.interfaces.Tokenizable;
+
 public class Bot extends ChatParticipantBase implements Tokenizable {
     private String greeting;
     private String definition;

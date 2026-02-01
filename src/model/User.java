@@ -1,5 +1,7 @@
 package model;
 
+import model.interfaces.Tokenizable;
+
 public class User extends ChatParticipantBase implements Tokenizable {
     private String persona;
     private boolean isPremium;
