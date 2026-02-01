@@ -112,6 +112,13 @@ public class Main {
                         int id = Integer.parseInt(scanner.nextLine());
                         Bot b = service.getBotById(id);
                         b.displayInfo();
+
+                        // [Reflection Demo]
+                        System.out.println("\n[SYSTEM] Run Reflection Analysis on this object? (y/n)");
+                        String ans = scanner.nextLine();
+                        if (ans.equalsIgnoreCase("y")) {
+                            utils.ReflectionUtils.inspectClass(b);
+                        }
                         break;
 
                     case "4":
